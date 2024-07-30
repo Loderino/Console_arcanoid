@@ -9,10 +9,23 @@ class PlatformDesk:
         """
         self.size=size
         self.x = x
+        self.sym = "="
     
-    def move(self, dx: int) -> None:
+    def __str__(self) -> str:
+        """
+            Возвращает строковое представление объекта. Вызывается при приведении объекта к типу str.
+
+        Returns:
+            str: строковое представление объекта.
+        """
+        return self.sym*self.size
+
+    def move(self, dx: int, max_limit: int) -> None:
         """Изменяет координаты платформы.
 
         Args:
             dx (int): Смещение по горизонтали в символах.
+            max_limit (int): x-координата правой стенки рабочего окна.
         """
+        if self.x+dx>=0 and self.x+dx+self.size<=max_limit:
+            self.x+=dx
