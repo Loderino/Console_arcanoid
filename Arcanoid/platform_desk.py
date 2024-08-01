@@ -1,7 +1,3 @@
-import random
-
-from Arcanoid.ball import Ball
-
 class PlatformDesk:
     """Класс платформы"""
     def __init__(self, x, y, size=11):
@@ -16,8 +12,8 @@ class PlatformDesk:
         self.x = x
         self.y = y
         self.sym = "="
-        self.balls = [Ball(self.x+self.size//2, self.y-1, 8)]
         self.has_ball = True
+        self.observer = None
     
     def __str__(self) -> str:
         """
@@ -37,22 +33,18 @@ class PlatformDesk:
         """
         if self.x+dx>=0 and self.x+dx+self.size<=max_limit:
             self.x+=dx
-            if self.has_ball:
-                for ball in self.balls:
-                    ball.move(0, 0, shift_x=dx)
+            self.observer.notice(self)
+            
+    def add_observer(self, observer):
+        self.observer = observer
 
     def change_y_pos(self, y):
         self.y = y
-        if self.has_ball:
-            for ball in self.balls:
-                ball.y = y-1
+        self.observer.notice(self)
 
     def launch(self):
         if self.has_ball:
             self.has_ball = False
-            for ball in self.balls:
-                ball.dx = random.choice([-1, 1])
-                ball.dy = 1
 
-    def check_balls(self):
-        self.balls = list(filter(lambda ball: not ball.is_dead, self.balls))
+    def get_pixels_coordinates(self):
+        return [(self.x+shift, self.y) for shift in range(self.size)]

@@ -1,25 +1,32 @@
 import unicurses as curses
 
-from Arcanoid.color_themes import init_color_themes, PLATFORM_DESC_COLOR, BALL_COLOR
-from Arcanoid.platform_desk import PlatformDesk
+from Arcanoid import GAME_SIZE_X, GAME_SIZE_Y
+from Arcanoid.color_themes import init_color_themes, PLATFORM_DESC_COLOR, BALL_COLOR, BRICK_TYPE_1_COLOR, BRICK_TYPE_2_COLOR, BRICK_TYPE_3_COLOR
+from Arcanoid.map import Map
 
-def redraw_screen(platform_desk: PlatformDesk):
-    curses.move(platform_desk.y, platform_desk.x)
-    curses.addstr(str(platform_desk), PLATFORM_DESC_COLOR)
-    for ball in platform_desk.balls:
-        curses.move(ball.y, ball.x)
-        curses.addch(str(ball), BALL_COLOR)
+bricks_colors = (BRICK_TYPE_1_COLOR, BRICK_TYPE_2_COLOR, BRICK_TYPE_3_COLOR)
 
-def move_balls(width: int, height: int, platform_desk: PlatformDesk):
-    check_balls_flag = False
-    for ball in platform_desk.balls:
-        if ball.y+1 == platform_desk.y and 0 <= ball.x-platform_desk.x < platform_desk.size:
-            ball.dy=-abs(ball.dy)
-        ball.move(width, height)
-        if ball.is_dead:
-            check_balls_flag=True
-    if check_balls_flag:
-        platform_desk.check_balls()
+def redraw_screen(game_map: Map):
+    if game_map.check_for_change():
+        curses.clear()
+        curses.move(game_map.platform_desk.y, game_map.platform_desk.x)
+        curses.addstr(str(game_map.platform_desk), PLATFORM_DESC_COLOR)
+        for counter, brick in enumerate(game_map.bricks):
+            curses.move(brick.y, brick.x)
+            curses.addch(str(brick), bricks_colors[counter%len(bricks_colors)])
+        for ball in game_map.balls:
+            curses.move(ball.y, ball.x)
+            curses.addch(str(ball), BALL_COLOR)
+        curses.refresh()
+
+def check_for_small_screen(stdscr):
+    height, width = curses.getmaxyx(stdscr)
+    while height<GAME_SIZE_Y or width<GAME_SIZE_X:
+        curses.clear()
+        curses.addstr("Для продолжения игры расширьте окно")
+        curses.refresh()
+        curses.napms(100)
+        height, width = curses.getmaxyx(stdscr)
 
 def main(stdscr):
     curses.start_color()
@@ -29,26 +36,31 @@ def main(stdscr):
     curses.cbreak()
     curses.nodelay(stdscr, True) # позволяет использовать getch без блокирования программы
     curses.keypad(stdscr, True)  # Позволяет считывать специальные клавиши, такие как стрелки
-
+    
+    check_for_small_screen(stdscr)
     height, width = curses.getmaxyx(stdscr)
-    platform_desk = PlatformDesk(width//2-1, height-1)
+    game_map = Map(width, height)
+    game_map.initialize_platform()
 
-    while len(platform_desk.balls)>0:
+    platform_desk = game_map.platform_desk
+    while len(game_map.balls)>0:
+        check_for_small_screen(stdscr)
         height, width = curses.getmaxyx(stdscr)
-        curses.clear()
+
         key = curses.getch()
         if key == curses.KEY_RESIZE:
-            platform_desk.change_y_pos(height-1)
+            game_map.resize(*curses.getmaxyx(stdscr)[::-1])
         if key == ord(' '):
-            platform_desk.launch()
+            game_map.launch_ball()
         if key in [ord('a'), ord('A'), curses.KEY_LEFT]:
             platform_desk.move(-1, width)
         if key in [ord('d'), ord('D'), curses.KEY_RIGHT]:
             platform_desk.move(1, width)
 
-        move_balls(width, height, platform_desk)
-        redraw_screen(platform_desk)
-        curses.refresh()
-        curses.napms(10)
+        curses.flushinp()
+        game_map.move_balls()
+        redraw_screen(game_map)
+        
+        curses.napms(100)
     
 curses.wrapper(main)
