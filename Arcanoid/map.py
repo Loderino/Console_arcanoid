@@ -1,5 +1,6 @@
 import random
 
+from Arcanoid import BALL_SPEED, PLATFORM_SIZE
 from Arcanoid.platform_desk import PlatformDesk
 from Arcanoid.ball import Ball
 
@@ -41,15 +42,15 @@ class Map:
         return False
 
     def initialize_platform(self):
-        self.platform_desk = PlatformDesk(self.xlim//2, self.ylim-2)
-        self.balls.append(Ball(self.platform_desk.x+self.platform_desk.size//2, self.platform_desk.y-1, 8))
+        self.platform_desk = PlatformDesk(self.xlim//2-PLATFORM_SIZE//2, self.ylim-2, size=PLATFORM_SIZE)
+        self.balls.append(Ball(self.platform_desk.x+self.platform_desk.size//2, self.platform_desk.y-1, BALL_SPEED))
         self.platform_desk.add_observer(self)
         self.balls[0].add_observer(self)
         self.active_pixels[self.platform_desk] = set(self.platform_desk.get_pixels_coordinates())
         self.active_pixels[self.balls[0]] = self.balls[0].get_pixels_coordinates()
 
     def initialize_bricks(self):
-        self.bricks = [Brick(x, y) for x in range(100) for y in range(10)]
+        self.bricks = [Brick(x, y) for x in range(0,170, 3) for y in range(10)]
         self.active_pixels["bricks"] = set([brick.get_active_pixels() for brick in self.bricks])
 
 
@@ -70,18 +71,35 @@ class Map:
         
         elif obj in self.balls:
             self.active_pixels[obj] = (obj.x, obj.y)
+            potential_pixel_x = (obj.x-obj.dx, obj.y)
+            potential_pixel_y = (obj.x, obj.y-obj.dy)
             if (obj.x+obj.dx, obj.y+obj.dy) in self.active_pixels[self.platform_desk]:
                 obj.dy=-abs(obj.dy)
-            elif (obj.x+obj.dx, obj.y+obj.dy) in self.active_pixels["bricks"]:
-                self.active_pixels["bricks"].remove((obj.x+obj.dx, obj.y+obj.dy))
-                self.crush_brick(obj.x+obj.dx, obj.y+obj.dy)
-                obj.dx*=-1
-                obj.dy*=-1
+            
+            if obj.get_pixels_coordinates() in self.active_pixels["bricks"]:
+                if potential_pixel_x in self.active_pixels["bricks"]:
+                    obj.dy*=-1
+                    obj.x-=obj.dx
+                    obj.y+=obj.dy
+                    self.crush_brick(*potential_pixel_x)
+
+                elif potential_pixel_y in self.active_pixels["bricks"]:
+                    obj.dx*=-1
+                    obj.y-=obj.dy
+                    obj.x+=obj.dx
+                    self.crush_brick(*potential_pixel_y)
+                
+                else:
+                    obj.dx*=-1
+                    obj.dy*=-1
+                    self.crush_brick(*obj.get_pixels_coordinates())
+
 
     def crush_brick(self, x, y):
         for brick in self.bricks:
             if brick.has_pixel(x, y):
                 self.bricks.remove(brick)
+                self.active_pixels["bricks"].remove((x, y))
                 break
 
 

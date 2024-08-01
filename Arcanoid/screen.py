@@ -8,7 +8,7 @@ bricks_colors = (BRICK_TYPE_1_COLOR, BRICK_TYPE_2_COLOR, BRICK_TYPE_3_COLOR)
 
 def redraw_screen(game_map: Map):
     if game_map.check_for_change():
-        curses.clear()
+        curses.erase()
         curses.move(game_map.platform_desk.y, game_map.platform_desk.x)
         curses.addstr(str(game_map.platform_desk), PLATFORM_DESC_COLOR)
         for counter, brick in enumerate(game_map.bricks):
@@ -61,6 +61,6 @@ def main(stdscr):
         game_map.move_balls()
         redraw_screen(game_map)
         
-        curses.napms(100)
+        curses.napms(10)
     
 curses.wrapper(main)
