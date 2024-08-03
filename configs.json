@@ -1,4 +1,6 @@
 {
-    "ball_speed": 7,
-    "platform_size": 11
+    "ball_speed": 5,
+    "platform_size": 33,
+    "platform_speed": 3,
+    "level": 1
 }

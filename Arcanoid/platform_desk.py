@@ -1,6 +1,6 @@
 class PlatformDesk:
     """Класс платформы"""
-    def __init__(self, x, y, size=11):
+    def __init__(self, x, y, size=11, speed=1):
         """Создаёт экземпляр платформы.
 
         Args:
@@ -14,6 +14,7 @@ class PlatformDesk:
         self.sym = "="
         self.has_ball = True
         self.observer = None
+        self.speed=speed
     
     def __str__(self) -> str:
         """
@@ -32,9 +33,11 @@ class PlatformDesk:
             max_limit (int): x-координата правой стенки рабочего окна.
         """
         if self.x+dx>=0 and self.x+dx+self.size<=max_limit:
-            self.x+=dx
+            for _ in range(self.speed):
+                if self.x+dx>=0 and self.x+dx+self.size<=max_limit:
+                    self.x+=dx
             self.observer.notice(self)
-            
+                
     def add_observer(self, observer):
         self.observer = observer
 

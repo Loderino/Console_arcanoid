@@ -43,7 +43,7 @@ def main(stdscr):
     game_map.initialize_platform()
 
     platform_desk = game_map.platform_desk
-    while len(game_map.balls)>0:
+    while len(game_map.balls)>0 and len(game_map.bricks)>0:
         check_for_small_screen(stdscr)
         height, width = curses.getmaxyx(stdscr)
 
