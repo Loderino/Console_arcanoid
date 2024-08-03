@@ -1,12 +1,20 @@
 import unicurses as curses
 
-from Arcanoid import GAME_SIZE_X, GAME_SIZE_Y
-from Arcanoid.color_themes import init_color_themes, PLATFORM_DESC_COLOR, BALL_COLOR, BRICK_TYPE_1_COLOR, BRICK_TYPE_2_COLOR, BRICK_TYPE_3_COLOR
+from Arcanoid import get_game_params 
 from Arcanoid.map import Map
+from Arcanoid.color_themes import (init_color_themes, 
+                                   PLATFORM_DESC_COLOR, BALL_COLOR, BRICK_TYPE_1_COLOR, BRICK_TYPE_2_COLOR, BRICK_TYPE_3_COLOR)
 
 bricks_colors = (BRICK_TYPE_1_COLOR, BRICK_TYPE_2_COLOR, BRICK_TYPE_3_COLOR)
+game_params = get_game_params()
 
-def redraw_screen(game_map: Map):
+def redraw_screen(game_map: Map) -> None:
+    """
+    Перерисовывает экран, если есть изменения на карте.
+
+    Args:
+        game_map (Map): Объект карты.
+    """
     if game_map.check_for_change():
         curses.erase()
         curses.move(game_map.platform_desk.y, game_map.platform_desk.x)
@@ -19,16 +27,22 @@ def redraw_screen(game_map: Map):
             curses.addch(str(ball), BALL_COLOR)
         curses.refresh()
 
-def check_for_small_screen(stdscr):
+def check_for_small_screen(stdscr) -> None:
+    """
+    Блокирует игру, пока терминал не будет расширен до минимальных размеров, установленных в конфигурациях игры.
+    """
     height, width = curses.getmaxyx(stdscr)
-    while height<GAME_SIZE_Y or width<GAME_SIZE_X:
+    while height<game_params["min_game_height"] or width<game_params["min_game_width"]:
         curses.clear()
         curses.addstr("Для продолжения игры расширьте окно")
         curses.refresh()
         curses.napms(100)
         height, width = curses.getmaxyx(stdscr)
 
-def main(stdscr):
+def main(stdscr) -> None:
+    """
+    Основная функция игры.
+    """
     curses.start_color()
     init_color_themes()
     curses.curs_set(0)
@@ -62,5 +76,3 @@ def main(stdscr):
         redraw_screen(game_map)
         
         curses.napms(10)
-    
-curses.wrapper(main)

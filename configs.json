@@ -1,6 +1,8 @@
 {
-    "ball_speed": 5,
-    "platform_size": 33,
-    "platform_speed": 3,
+    "min_game_width": 150,
+    "min_game_height": 40,
+    "ball_speed": 2,
+    "platform_size": 11,
+    "platform_speed": 1,
     "level": 1
 }

@@ -1,31 +1,17 @@
 import random
 
-from Arcanoid import BALL_SPEED, PLATFORM_SIZE, PLATFORM_SPEED, LEVEL, MAPS_PATH
-from Arcanoid.platform_desk import PlatformDesk
-from Arcanoid.ball import Ball
-
-class Brick:
-    def __init__(self, x: int, y: int, width: int = 1, height: int = 1):
-        self.x = x
-        self.y = y
-        self.width = width
-        self.height = height
-        self.sym = "#"
-
-    def __str__(self):
-        return "\n".join([self.sym*self.width]*self.height)
-    
-    def has_pixel(self, x, y):
-        if self.x==x and self.y==y:
-            return True
-        return False
-    
-    def get_active_pixels(self):
-        return (self.x, self.y)
-    
+from Arcanoid import MAPS_PATH, get_game_params, Ball, Brick, PlatformDesk
     
 class Map:
-    def __init__(self, xlim, ylim):
+    """Класс карты (контроллер движений элементов)"""
+    def __init__(self, xlim: int, ylim: int):
+        """
+        Создаёт экземпляр контроллера.
+
+        Args:
+            xlim (int): ширина игровой области в символах.
+            ylim (int): высота игровой области в символах.
+        """
         self.xlim=xlim
         self.ylim=ylim
         self.platform_desk=None
@@ -33,37 +19,68 @@ class Map:
         self.bricks = []
         self.active_pixels={}
         self.is_changed = False
-        self.initialize_bricks()
+        self.game_params = get_game_params()
+        self._initialize_bricks()
 
-    def check_for_change(self):
+    def check_for_change(self) -> bool:
+        """
+        Проверяет, изменилось ли положения каких-либо объектов.
+        
+        Returns:
+            bool: True, если произошло неотслеженное движение каких-либо объектов, иначе False.
+        """
         if self.is_changed:
             self.is_changed=False
             return True
         return False
 
-    def initialize_platform(self):
-        self.platform_desk = PlatformDesk(self.xlim//2-PLATFORM_SIZE//2, self.ylim-2, size=PLATFORM_SIZE, speed=PLATFORM_SPEED)
-        self.balls.append(Ball(self.platform_desk.x+self.platform_desk.size//2, self.platform_desk.y-1, BALL_SPEED))
+    def initialize_platform(self) -> None:
+        """
+        Инициализирует платформу с мячом на ней и начинает их отслеживание.
+        """
+        self.platform_desk = PlatformDesk(self.xlim//2-self.game_params["platform_size"]//2,
+                                          self.ylim-2,
+                                          size=self.game_params["platform_size"],
+                                          speed=self.game_params["platform_speed"])
+        self.balls.append(Ball(self.platform_desk.x+self.platform_desk.size//2, 
+                               self.platform_desk.y-1, 
+                               self.game_params["ball_speed"]))
         self.platform_desk.add_observer(self)
         self.balls[0].add_observer(self)
         self.active_pixels[self.platform_desk] = self.platform_desk.get_pixels_coordinates()
         self.active_pixels[self.balls[0]] = self.balls[0].get_pixels_coordinates()
 
-    def initialize_bricks(self):
-        with open(f"{MAPS_PATH}level{LEVEL}.txt") as file:
+    def _initialize_bricks(self) -> None:
+        """
+        Инициализирует кирпичи, согласно файлу карты уровня.
+        """
+        with open(f"{MAPS_PATH}level{self.game_params['level']}.txt", encoding="utf-8") as file:
             for y_index, line in enumerate(file):
                 for x_index, sym in enumerate(line):
                     if sym=="#":
                         self.bricks.append(Brick(x_index, y_index))
-        self.active_pixels["bricks"] = set([brick.get_active_pixels() for brick in self.bricks])
+        self.active_pixels["bricks"] = set([brick.get_pixels_coordinates() for brick in self.bricks])
 
 
-    def resize(self, xlim, ylim):
+    def resize(self, xlim: int, ylim: int) -> None:
+        """
+        Изменяет размеры игровой области и перемещает платформу по оси OY.
+
+        Args:
+            xlim (int): ширина игровой области в символах.
+            ylim (int): высота игровой области в символах. 
+        """
         self.xlim = xlim
         self.ylim = ylim
         self.platform_desk.change_y_pos(ylim-2)
 
     def notice(self, obj):
+        """
+        Метод уведомления. Вызывается отслеживаемым объектом при изменении своих координат.
+
+        Args:
+            obj (Ball | PlatformDesk): Объект мяча или платформы, которые изменили положение.
+        """
         self.is_changed=True
         pixels = obj.get_pixels_coordinates()
         if obj is self.platform_desk:
@@ -97,18 +114,18 @@ class Map:
                         obj.dy*=-1
                         obj.x-=obj.dx
                         obj.y+=obj.dy
-                        self.crush_brick(*potential_pixel_x)
+                        self._crush_brick(*potential_pixel_x)
 
                     elif potential_pixel_y in self.active_pixels["bricks"]:
                         obj.dx*=-1
                         obj.y-=obj.dy
                         obj.x+=obj.dx
-                        self.crush_brick(*potential_pixel_y)
+                        self._crush_brick(*potential_pixel_y)
                     
                     else:
                         obj.dx*=-1
                         obj.dy*=-1
-                        self.crush_brick(*obj.get_pixels_coordinates())
+                        self._crush_brick(*obj.get_pixels_coordinates())
             
             elif abs(obj.dx)==2:
                 potential_pixel_x_1 = (obj.x-obj.dx//2, obj.y-obj.dy)
@@ -120,26 +137,33 @@ class Map:
                         obj.y-=obj.dy
                         obj.x-=obj.dx
                         obj.dx*=-1
-                        self.crush_brick(*potential_pixel_x_1)
+                        self._crush_brick(*potential_pixel_x_1)
                     
                     elif potential_pixel_y in self.active_pixels["bricks"]:
                         obj.x-=obj.dx//2
                         obj.y-=obj.dy
                         obj.dy*=-1
-                        self.crush_brick(*potential_pixel_y)
+                        self._crush_brick(*potential_pixel_y)
 
                     elif potential_pixel_x_2 in self.active_pixels["bricks"]:
                         obj.y-=obj.dy
                         obj.x-=obj.dx//2
                         obj.dx*=-1
-                        self.crush_brick(*potential_pixel_x_2)
+                        self._crush_brick(*potential_pixel_x_2)
                     
                     else:
                         obj.dx*=-1
-                        self.crush_brick(*obj.get_pixels_coordinates())
+                        self._crush_brick(*obj.get_pixels_coordinates())
 
 
-    def crush_brick(self, x, y):
+    def _crush_brick(self, x: int, y: int):
+        """
+        Метод уничтожения кирпича
+
+        Args:
+            x (int): _description_
+            y (int): _description_
+        """
         for brick in self.bricks:
             if brick.has_pixel(x, y):
                 self.bricks.remove(brick)
@@ -147,13 +171,19 @@ class Map:
                 break
 
 
-    def launch_ball(self):
+    def launch_ball(self) -> None:
+        """
+        Метод запуска мяча. Вызывает метод запуска у платформы и задаёт начальное направление мячу.
+        """
         self.platform_desk.launch()
         for ball in self.balls:
             ball.dx = random.choice([-1, 1])
             ball.dy = -1
 
-    def move_balls(self):
+    def move_balls(self) -> None:
+        """
+        Метод движения мячей.
+        """
         for ball in self.balls:
             ball.move(self.xlim, self.ylim)
             if ball.is_dead:
