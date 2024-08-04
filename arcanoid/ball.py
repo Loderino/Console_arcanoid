@@ -1,4 +1,6 @@
-class Ball:
+from arcanoid.base_object import BaseObject
+
+class Ball(BaseObject):
     """Класс мяча"""
     def __init__(self, x: int, y: int, period: int):
         """
@@ -9,11 +11,9 @@ class Ball:
             y (int): y-координата мяча.
             period (int): период, в течение которого мяч не движется. Чем он больше, тем медленнее мяч.
         """
-        self.x = x
-        self.y = y
+        super().__init__(x, y, "O")
         self.dx = 0
         self.dy = 0
-        self.sym="O"
         self.period = period
         self.current_stage = 0
         self.is_dead = False
@@ -59,15 +59,6 @@ class Ball:
             if self.y == y_lim:
                 self.is_dead = True
                 self.sym=" "
-
-    def add_observer(self, observer) -> None:
-        """
-        Инициирует наблюдателя за мячом.
-
-        Args:
-            observer (Map): наблюдатель - экземпляр класса Map.
-        """
-        self.observer = observer
 
     def get_pixels_coordinates(self) -> tuple[int, int]:
         """

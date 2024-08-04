@@ -4,11 +4,22 @@
 
 ## Установка
 
-### Для Linux
+### Для Linux / Mac OS
 
 ```bash
+git clone git@github.com:Loderino/Console_arcanoid.git
 python3 -m venv venv
 source venv/bin/activate
+python -m pip install --upgrade pip
+pip install -e .
+```
+
+### Для Windows
+
+```shell
+git clone git@github.com:Loderino/Console_arcanoid.git
+python -m venv venv
+venv\Scripts\activate
 python -m pip install --upgrade pip
 pip install -e .
 ```
@@ -16,7 +27,7 @@ pip install -e .
 ## Запуск
 
 ```bash
-python Arcanoid
+python arcanoid
 ```
 
 

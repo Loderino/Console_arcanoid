@@ -1,7 +1,7 @@
 import random
 
-from Arcanoid import MAPS_PATH, get_game_params, Ball, Brick, PlatformDesk
-    
+from arcanoid import MAPS_PATH, get_game_params, Ball, Brick, PlatformDesk
+
 class Map:
     """Класс карты (контроллер движений элементов)"""
     def __init__(self, xlim: int, ylim: int):

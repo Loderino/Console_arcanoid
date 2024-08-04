@@ -1,8 +1,8 @@
 import json
 
-from Arcanoid.ball import Ball
-from Arcanoid.brick import Brick
-from Arcanoid.platform_desk import PlatformDesk
+from arcanoid.ball import Ball
+from arcanoid.brick import Brick
+from arcanoid.platform_desk import PlatformDesk
 
 __all__ = ["Ball", "Brick", "PlatformDesk"]
 MAPS_PATH = "./maps/"

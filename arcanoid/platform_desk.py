@@ -1,4 +1,6 @@
-class PlatformDesk:
+from arcanoid.base_object import BaseObject
+
+class PlatformDesk(BaseObject):
     """Класс платформы"""
     def __init__(self, x, y, size=11, speed=1):
         """
@@ -10,11 +12,9 @@ class PlatformDesk:
             size (int, optional): Размер платформы в символах. По умолчанию 11.
             speed (int, optional): количество символов, которое платформа пройдёт за одно движение. По умолчанию 1.
         """
-        self.x = x
-        self.y = y
+        super().__init__(x, y, "=")
         self.size=size
         self.speed=speed
-        self.sym = "="
         self.has_ball = True
         self.observer = None
     
@@ -40,15 +40,6 @@ class PlatformDesk:
                 if self.x+dx>=0 and self.x+dx+self.size<=max_limit:
                     self.x+=dx
             self.observer.notice(self)
-                
-    def add_observer(self, observer) -> None:
-        """
-        Инициирует наблюдателя за платформой.
-
-        Args:
-            observer (Map): наблюдатель - экземпляр класса Map.
-        """
-        self.observer = observer
 
     def change_y_pos(self, y: int) -> None:
         """

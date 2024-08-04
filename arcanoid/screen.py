@@ -1,8 +1,8 @@
 import unicurses as curses
 
-from Arcanoid import get_game_params 
-from Arcanoid.map import Map
-from Arcanoid.color_themes import (init_color_themes, 
+from arcanoid import get_game_params 
+from arcanoid.map import Map
+from arcanoid.color_themes import (init_color_themes, 
                                    PLATFORM_DESC_COLOR, BALL_COLOR, BRICK_TYPE_1_COLOR, BRICK_TYPE_2_COLOR, BRICK_TYPE_3_COLOR)
 
 bricks_colors = (BRICK_TYPE_1_COLOR, BRICK_TYPE_2_COLOR, BRICK_TYPE_3_COLOR)
