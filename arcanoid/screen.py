@@ -1,7 +1,9 @@
+import os
 import unicurses as curses
 
-from arcanoid import get_game_params 
+from arcanoid import get_game_params, MAPS_PATH, SCREENS_PATH
 from arcanoid.map import Map
+from arcanoid.utils import read_map_from_file
 from arcanoid.color_themes import (init_color_themes, 
                                    PLATFORM_DESC_COLOR, BALL_COLOR, BRICK_TYPE_1_COLOR, BRICK_TYPE_2_COLOR, BRICK_TYPE_3_COLOR)
 
@@ -39,6 +41,44 @@ def check_for_small_screen(stdscr) -> None:
         curses.napms(100)
         height, width = curses.getmaxyx(stdscr)
 
+def select_level(stdscr) -> str:
+    """Функция для показа экрана выбора уровня"""
+    files = os.listdir(MAPS_PATH)
+    if not len(files):
+        raise Exception("Отсутствует директория с картами")
+    current_pos = 0
+    symbols = read_map_from_file(SCREENS_PATH+"logo.txt")
+    is_changed = True
+    while True:
+        check_for_small_screen(stdscr)
+        if is_changed:
+            curses.erase()
+            for symbol in symbols:
+                curses.move(symbol.y, symbol.x)
+                curses.addch(symbol.sym)
+            curses.move(12, 64)
+            curses.addstr("Выберите уровень")
+
+            curses.move(14, 64)
+            curses.addstr(f"-> {files[current_pos].strip('.txt')}")
+            
+            curses.refresh()
+            is_changed = False
+        
+        key = curses.getch()
+        if key in (curses.KEY_LEFT, curses.KEY_UP):
+            current_pos = (current_pos-1)%len(files)
+            is_changed = True
+        elif key in (curses.KEY_RIGHT, curses.KEY_DOWN):
+            current_pos = (current_pos+1)%len(files)
+            is_changed = True
+        elif key == ord("\n"):
+            return MAPS_PATH+files[current_pos]
+        curses.flushinp()
+        curses.napms(100)
+        
+
+
 def main(stdscr) -> None:
     """
     Основная функция игры.
@@ -48,31 +88,48 @@ def main(stdscr) -> None:
     curses.curs_set(0)
     curses.noecho()
     curses.cbreak()
-    curses.nodelay(stdscr, True) # позволяет использовать getch без блокирования программы
-    curses.keypad(stdscr, True)  # Позволяет считывать специальные клавиши, такие как стрелки
+    curses.nodelay(stdscr, True)
+    curses.keypad(stdscr, True)
     
-    check_for_small_screen(stdscr)
-    height, width = curses.getmaxyx(stdscr)
-    game_map = Map(width, height)
-    game_map.initialize_platform()
-
-    platform_desk = game_map.platform_desk
-    while len(game_map.balls)>0 and len(game_map.bricks)>0:
+    while True:
         check_for_small_screen(stdscr)
-        height, width = curses.getmaxyx(stdscr)
+        level_file = select_level(stdscr)
+        game_map = Map(level_file)
+        game_map.initialize_platform()
 
-        key = curses.getch()
-        if key == curses.KEY_RESIZE:
-            game_map.resize(*curses.getmaxyx(stdscr)[::-1])
-        if key == ord(' '):
-            game_map.launch_ball()
-        if key in [ord('a'), ord('A'), curses.KEY_LEFT]:
-            platform_desk.move(-1, width)
-        if key in [ord('d'), ord('D'), curses.KEY_RIGHT]:
-            platform_desk.move(1, width)
+        platform_desk = game_map.platform_desk
+        while len(game_map.balls)>0 and len(game_map.bricks)>0:
+            check_for_small_screen(stdscr)
 
-        curses.flushinp()
-        game_map.move_balls()
-        redraw_screen(game_map)
-        
-        curses.napms(10)
+            key = curses.getch()
+            if key == curses.KEY_RESIZE:
+                game_map.resize(*curses.getmaxyx(stdscr)[::-1])
+            if key == ord(' '):
+                game_map.launch_ball()
+            if key in [ord('a'), ord('A'), curses.KEY_LEFT]:
+                platform_desk.move(-1)
+            if key in [ord('d'), ord('D'), curses.KEY_RIGHT]:
+                platform_desk.move(1)
+
+            curses.flushinp()
+            game_map.move_balls()
+            redraw_screen(game_map)
+            
+            curses.napms(10)
+
+        symbols = read_map_from_file(SCREENS_PATH+("victory.txt" if game_map.balls else "game_over.txt"))
+        while True:
+            check_for_small_screen(stdscr)
+            curses.erase()
+            for symbol in symbols:
+                curses.move(symbol.y, symbol.x)
+                curses.addch(symbol.sym)
+            curses.move(12, 64)
+            curses.addstr("Нажмите enter")
+            curses.refresh()
+    
+            key = curses.getch()
+            if key == ord("\n"):
+                break
+            curses.flushinp()
+            curses.napms(100)

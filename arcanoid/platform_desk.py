@@ -27,7 +27,7 @@ class PlatformDesk(BaseObject):
         """
         return self.sym*self.size
 
-    def move(self, dx: int, max_limit: int) -> None:
+    def move(self, dx: int) -> None:
         """
         Метод движения платформы. Изменяет координаты платформы и уведомляет наблюдателя о смене положения.
 
@@ -35,9 +35,9 @@ class PlatformDesk(BaseObject):
             dx (int): направление движения: 1 - вправо, -1 - влево.
             max_limit (int): x-координата правой стенки игровой области.
         """
-        if self.x+dx>=0 and self.x+dx+self.size<=max_limit:
+        if self.x+dx>=0 and self.x+dx+self.size<=self.observer.xlim:
             for _ in range(self.speed):
-                if self.x+dx>=0 and self.x+dx+self.size<=max_limit:
+                if self.x+dx>=0 and self.x+dx+self.size<=self.observer.xlim:
                     self.x+=dx
             self.observer.notice(self)
 

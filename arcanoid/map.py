@@ -1,26 +1,25 @@
 import random
 
-from arcanoid import MAPS_PATH, get_game_params, Ball, Brick, PlatformDesk
+from arcanoid import get_game_params, Ball, Brick, PlatformDesk
 
 class Map:
     """Класс карты (контроллер движений элементов)"""
-    def __init__(self, xlim: int, ylim: int):
+    def __init__(self, level_file: str):
         """
         Создаёт экземпляр контроллера.
 
         Args:
-            xlim (int): ширина игровой области в символах.
-            ylim (int): высота игровой области в символах.
+            level_file(str): путь к файлу уровня.
         """
-        self.xlim=xlim
-        self.ylim=ylim
+        self.game_params = get_game_params()
+        self.xlim=self.game_params["min_game_width"]
+        self.ylim=self.game_params["min_game_height"]
         self.platform_desk=None
         self.balls = []
         self.bricks = []
         self.active_pixels={}
         self.is_changed = False
-        self.game_params = get_game_params()
-        self._initialize_bricks()
+        self._initialize_bricks(level_file)
 
     def check_for_change(self) -> bool:
         """
@@ -50,11 +49,11 @@ class Map:
         self.active_pixels[self.platform_desk] = self.platform_desk.get_pixels_coordinates()
         self.active_pixels[self.balls[0]] = self.balls[0].get_pixels_coordinates()
 
-    def _initialize_bricks(self) -> None:
+    def _initialize_bricks(self, level_file) -> None:
         """
         Инициализирует кирпичи, согласно файлу карты уровня.
         """
-        with open(f"{MAPS_PATH}level{self.game_params['level']}.txt", encoding="utf-8") as file:
+        with open(level_file, encoding="utf-8") as file:
             for y_index, line in enumerate(file):
                 for x_index, sym in enumerate(line):
                     if sym=="#":

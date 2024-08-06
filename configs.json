@@ -3,6 +3,5 @@
     "min_game_height": 40,
     "ball_speed": 2,
     "platform_size": 11,
-    "platform_speed": 1,
-    "level": 1
+    "platform_speed": 1
 }
